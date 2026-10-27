@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 assets = { directory = "./public", binding = "ASSETS" }
+services = [{ binding = "PROVIDER_SERVICE", service = "api" }]
 
 [ai]
 binding = "AI"
