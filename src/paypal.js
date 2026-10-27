@@ -35,11 +35,26 @@ export function createOrder(env, quote) {
   }, `order-${quote.id}`);
 }
 
-export async function captureOrder(env, orderId) {
-  const data = await call(env, `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, null, `capture-${orderId}`);
+export async function getOrder(env, orderId) {
+  const r = await fetch(`${env.PAYPAL_BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}`, { headers: { authorization: `Bearer ${await token(env)}` } });
+  if (!r.ok) throw new Error(`PayPal get order ${r.status}`);
+  return r.json();
+}
+
+function captureOf(data) {
   const cap = data.purchase_units?.[0]?.payments?.captures?.[0];
   if (!cap || cap.status !== "COMPLETED") throw new Error(`capture not completed (${cap?.status ?? data.status})`);
-  return { captureId: cap.id, amount: Number(cap.amount.value), quoteId: data.purchase_units[0].reference_id, payer: data.payer?.email_address ?? null };
+  return { captureId: cap.id, amount: Number(cap.amount.value), payer: data.payer?.email_address ?? null };
+}
+
+export async function captureOrder(env, orderId) {
+  try {
+    return captureOf(await call(env, `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, null, `capture-${orderId}`));
+  } catch (e) {
+    // Already captured (for example by the toolkit call a moment ago): read the capture from the order.
+    if (!/ORDER_ALREADY_CAPTURED|already been captured|422/.test(String(e.message))) throw e;
+    return captureOf(await getOrder(env, orderId));
+  }
 }
 
 export function refund(env, captureId, amount, note, idem) {

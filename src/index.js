@@ -2,7 +2,7 @@
 // Checks that return nothing are refunded to the buyer's PayPal automatically.
 import { CATALOG, ORDER_FEE, PRICE_PER_CHECK, MAX_CHECKS, priceOf } from "./catalog.js";
 import { plan, answer } from "./ai.js";
-import { createOrder, captureOrder, refund } from "./paypal.js";
+import { agentCreateOrder, agentCapture, agentRefund } from "./checkout-agent.js";
 import { buy } from "./provider.js";
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -44,13 +44,16 @@ async function order(env, req) {
   const qt = JSON.parse((await env.STORE.get(`quote:${quoteId}`)) ?? "null");
   if (!qt) return json({ error: "Quote expired. Ask again." }, 404);
   if (qt.status !== "quoted") return json({ error: "This quote is already paid." }, 409);
-  const o = await createOrder(env, qt);
+  const o = await agentCreateOrder(env, qt);
+  await env.STORE.put(`order:${o.id}`, JSON.stringify({ quoteId: qt.id, via: o.via }), { expirationTtl: DAY });
   return json({ id: o.id });
 }
 
 async function capture(env, orderId) {
-  const cap = await captureOrder(env, orderId);
-  const key = `quote:${cap.quoteId}`;
+  const link = JSON.parse((await env.STORE.get(`order:${orderId}`)) ?? "null");
+  if (!link) return json({ error: "Unknown order." }, 404);
+  const cap = await agentCapture(env, orderId);
+  const key = `quote:${link.quoteId}`;
   const qt = JSON.parse((await env.STORE.get(key)) ?? "null");
   if (!qt) return json({ error: "Quote not found for this payment." }, 404);
   if (qt.status !== "quoted") return json(JSON.parse((await env.STORE.get(`receipt:${qt.id}`)) ?? "{}"));
@@ -62,8 +65,7 @@ async function capture(env, orderId) {
   let refundInfo = null;
   if (refundDue > 0) {
     try {
-      const r = await refund(env, cap.captureId, refundDue, `PerCall refund: ${failed.length} of ${results.length} checks returned no data.`, `refund-${qt.id}`);
-      refundInfo = { id: r.id, amount: refundDue, status: r.status };
+      refundInfo = await agentRefund(env, qt.id, cap.captureId, refundDue, failed.map((f) => ({ title: CATALOG[f.check].title })), results.length);
     } catch (e) {
       refundInfo = { amount: refundDue, status: "FAILED", error: String(e.message).slice(0, 200) };
     }
@@ -71,7 +73,7 @@ async function capture(env, orderId) {
   const text = results.some((r) => r.ok) ? await answer(env, qt.question, results) : "None of the checks returned data, so there is no answer and the checks were refunded.";
   const receipt = {
     id: qt.id, question: qt.question, answer: text, paidAt: Date.now(),
-    paypal: { orderId, captureId: cap.captureId, charged: cap.amount, refund: refundInfo, net: Math.round((cap.amount - (refundInfo?.status === "FAILED" ? 0 : refundDue)) * 100) / 100 },
+    paypal: { orderId, orderVia: link.via, captureId: cap.captureId, captureVia: cap.via, charged: cap.amount, refund: refundInfo, net: Math.round((cap.amount - (["FAILED", "UNKNOWN"].includes(refundInfo?.status) ? 0 : refundDue)) * 100) / 100 },
     checks: results.map((r) => ({ check: r.check, title: CATALOG[r.check].title, input: r.input, why: r.why, ok: r.ok, error: r.error ?? null, providerTx: r.paidTx ?? null, data: r.ok ? r.data : null })),
   };
   await env.STORE.put(`receipt:${qt.id}`, JSON.stringify(receipt), { expirationTtl: 90 * DAY });
