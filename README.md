@@ -3,6 +3,7 @@
 Pay per answer. Ask a question about a token, contract or wallet; an AI agent buys the data checks it needs, you pay once with PayPal, and every check that comes back empty is refunded to your PayPal on the spot.
 
 - Live demo (PayPal sandbox): https://percall.chainmarket-api.workers.dev
+- Demo video: https://youtu.be/hRfy-9pUfKw
 - Built for the PayPal AI Hackathon 2026
 
 ## Why
