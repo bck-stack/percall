@@ -1,0 +1,22 @@
+name = "percall"
+main = "src/index.js"
+account_id = "8c67f51d9b44398f2ab031fb2a4db4e4"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+assets = { directory = "./public", binding = "ASSETS" }
+
+[ai]
+binding = "AI"
+
+[vars]
+PAYPAL_BASE = "https://api-m.sandbox.paypal.com"
+DAILY_BUDGET_USD = "0.1"
+QUOTES_PER_HOUR = "20"
+
+# Secrets: PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, AGENT_WALLET_KEY (wrangler secret put …)
+
+[[kv_namespaces]]
+binding = "STORE"
+id = "4d21ca29e75c4eada5bd6ee2d44278dc"

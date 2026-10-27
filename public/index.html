@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PerCall · pay per answer</title>
+<meta name="description" content="Ask a question about a token, contract or wallet. An AI agent buys the data checks it needs, you pay once with PayPal, and checks that return nothing are refunded.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/">PerCall</a>
+    <span class="tag">Pay only for checks that return data</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="ask" class="card">
+    <h1>Ask before you send money</h1>
+    <p class="lead">Ask about a token, contract or wallet. An AI agent picks the data checks it needs and shows you the price. You pay once with PayPal. Any check that comes back empty is refunded.</p>
+    <form id="ask-form">
+      <textarea id="question" rows="3" maxlength="500" placeholder="Is the token 0x6982508145454Ce325dDbE47a25d4ec3d2311933 on Ethereum safe to buy?"></textarea>
+      <div class="examples" id="examples"></div>
+      <button type="submit" id="ask-btn">Get a quote</button>
+    </form>
+    <p class="note" id="ask-note"></p>
+  </section>
+
+  <section id="quote" class="card hidden">
+    <h2>Your quote</h2>
+    <p class="muted" id="quote-question"></p>
+    <ol id="quote-calls" class="calls"></ol>
+    <div class="total"><span>Total</span><strong id="quote-total"></strong></div>
+    <p class="note">Paid checks that return nothing are refunded to your PayPal automatically.</p>
+    <div id="paypal-buttons"></div>
+    <button class="link" id="quote-cancel" type="button">Change the question</button>
+  </section>
+
+  <section id="working" class="card hidden">
+    <div class="spinner"></div>
+    <p>Payment received. The agent is buying the data checks and writing your answer…</p>
+  </section>
+
+  <section id="receipt" class="card hidden">
+    <h2>Answer</h2>
+    <p class="muted" id="r-question"></p>
+    <div id="r-answer" class="answer"></div>
+    <h3>Checks bought</h3>
+    <ul id="r-checks" class="checks"></ul>
+    <h3>Payment</h3>
+    <dl id="r-pay" class="pay"></dl>
+    <p class="note"><a id="r-link" href="#">Link to this receipt</a> · <a href="/">Ask another question</a></p>
+  </section>
+
+  <section class="card how">
+    <h2>How it works</h2>
+    <ol>
+      <li><strong>Plan.</strong> An AI model reads your question and picks up to five checks from a menu of paid data APIs.</li>
+      <li><strong>Pay.</strong> You see the exact price before anything is bought, and pay once with PayPal.</li>
+      <li><strong>Buy.</strong> The agent pays the data provider per call in USDC (x402 on Base) and collects the results.</li>
+      <li><strong>Refund.</strong> Checks that return nothing are refunded to your PayPal on the spot, through the PayPal refunds API.</li>
+      <li><strong>Answer.</strong> The model writes a short answer that cites the check behind every fact.</li>
+    </ol>
+  </section>
+</main>
+
+<footer class="wrap foot">PayPal sandbox demo. Data checks are bought live from a public pay-per-call API.</footer>
+<script src="/app.js" type="module"></script>
+</body>
+</html>
