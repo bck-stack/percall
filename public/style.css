@@ -38,12 +38,12 @@ button { font: inherit; cursor: pointer; }
 .checks li { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
 .checks .ok { color: var(--ok); font-weight: 600; }
 .checks .bad { color: var(--bad); font-weight: 600; }
-.checks small { color: var(--muted); display: block; word-break: break-all; }
+.checks small { color: var(--muted); display: block; overflow-wrap: anywhere; }
 .checks details { margin-top: 6px; }
 .checks pre { max-height: 220px; overflow: auto; background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 10px; font-size: 12px; }
 .pay { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
 .pay dt { color: var(--muted); }
-.pay dd { margin: 0; word-break: break-all; }
+.pay dd { margin: 0; overflow-wrap: anywhere; }
 .how ol { padding-left: 20px; margin: 0; }
 .how li { margin: 6px 0; }
 .foot { color: var(--muted); font-size: 13px; padding-bottom: 32px; }
