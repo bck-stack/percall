@@ -17,6 +17,14 @@ async function api(path, body) {
   return data;
 }
 
+// Which PayPal steps the checkout agent made through PayPal Agent Toolkit.
+function via(p) {
+  const steps = [["order", p.orderVia], ["capture", p.captureVia], ["refund", p.refund?.via]].filter(([, v]) => v);
+  const agent = steps.filter(([, v]) => v === "agent-toolkit").map(([k]) => k);
+  const direct = steps.filter(([, v]) => v === "direct").map(([k]) => k);
+  return [agent.length ? `checkout agent via PayPal Agent Toolkit: ${agent.join(", ")}` : "", direct.length ? `direct PayPal API: ${direct.join(", ")}` : ""].filter(Boolean).join(" · ");
+}
+
 function renderReceipt(rc) {
   $("r-question").textContent = rc.question;
   $("r-answer").textContent = rc.answer;
@@ -31,7 +39,8 @@ function renderReceipt(rc) {
   $("r-pay").innerHTML = `
     <dt>Charged</dt><dd>${usd(p.charged)} (PayPal capture ${esc(p.captureId)})</dd>
     <dt>Refunded</dt><dd>${p.refund ? `${usd(p.refund.amount)} · ${esc(p.refund.status)}${p.refund.id ? ` (refund ${esc(p.refund.id)})` : ""}` : "nothing to refund"}</dd>
-    <dt>You paid</dt><dd><strong>${usd(p.net)}</strong></dd>`;
+    <dt>You paid</dt><dd><strong>${usd(p.net)}</strong></dd>
+    <dt>Handled by</dt><dd>${esc(via(p))}</dd>`;
   $("r-link").href = `/?r=${rc.id}`;
   show("receipt");
 }
